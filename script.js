@@ -1,112 +1,148 @@
-let arrResults = [];
-
-class Stopwatch {
-    constructor(display) {
-        this.running = false;
-        this.display = display;
-        this.reset();
-        this.print(this.times);
-    }
-
-    reset() {
-        this.times = {
-            minutes: 0,
-            seconds: 0,
-            miliseconds: 0
-        };
-    }
-
-    print() {
-        this.display.innerText = this.format(this.times);
-    }
-
-    format(times) {
-        return `${pad0(times.minutes)}:${pad0(times.seconds)}:${pad0(Math.floor(times.miliseconds))}`;
-    }
-
-    start() {
-        if (!this.running) {
-            this.running = true;
-            this.watch = setInterval(() => this.step(), 10);
+class Timer extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            running: false,
+            times: {
+                minutes: 0,
+                seconds: 0,
+                miliseconds: 0
+            },
+            arrResults: []
         }
     }
 
-    step() {
-        if (!this.running) return;
-        this.calculate();
-        this.print();
-    }
-
-    calculate() {
-        this.times.miliseconds += 1;
-        if (this.times.miliseconds >= 100) {
-            this.times.seconds += 1;
-            this.times.miliseconds = 0;
-        }
-        if (this.times.seconds >= 60) {
-            this.times.minutes += 1;
-            this.times.seconds = 0;
-        }
-    }
-
-    stop() {
-        this.running = false;
-        clearInterval(this.watch);
-    } 
-
-
-    createLi() {
-        let li = document.createElement('li');
-        let numberLi = arrResults.length;
-        li.innerText = `Time ${numberLi}: ${this.format(arrResults[numberLi-1])}`;
-        return li
-    }
-    
-
-    resetBtn(ulList) {
-        this.running = false;
-        clearInterval(this.watch);
-        if (arrResults.length < 10) {
-            arrResults.push(this.times);
-        }
-        else (alert('Max result is 10. Reset results'))
-
-            
-        ulList.appendChild(this.createLi());
-       
-        this.reset();
-        this.print(this.times);
-    }
-
-    resetResults() {
-        arrResults = [];
-        let listResults = document.querySelectorAll('li');
-        [ ...listResults].forEach(li => li.remove());
-    }
-}
-
-function pad0(value) {
+    pad0(value) {
         let result = value.toString();
         if (result.length < 2) {
             result = '0' + result;
         }
-        return result
+        return result;
+    }
+    
+    format(time) {
+        return  (`${this.pad0(time.minutes)}:${this.pad0(time.seconds)}:${this.pad0(time.miliseconds)}`);
     }
 
-const stopwatch = new Stopwatch(
-    document.querySelector('.stopwatch')
-);
+    start = () => {
+        if (!this.state.running) {
+            this.state.running = true;
+            this.state.watch = setInterval(() => this.step(), 10);
+        }
+    }
 
-let startButton = document.getElementById('start');
-startButton.addEventListener('click', () => stopwatch.start());
+    step() {
+        if (!this.state.running) return;
+        this.calculate();
+    }
 
-let stopButton = document.getElementById('stop');
-stopButton.addEventListener('click', () => stopwatch.stop());
+    calculate() {
+        this.setState({
+            times: {
+                minutes: this.state.times.minutes,
+                seconds: this.state.times.seconds,
+                miliseconds: this.state.times.miliseconds + 1
+            }
+        })
+        
+        if (this.state.times.miliseconds >= 100) {
+            this.setState({
+                times: {
+                    minutes: this.state.times.minutes,
+                    seconds: this.state.times.seconds + 1,
+                    miliseconds: 0
+                }
+            })
+        }
+        if (this.state.times.seconds >= 60) {
+            this.setState({
+                times: {
+                    minutes: this.state.times.minutes + 1,
+                    seconds: 0,
+                    miliseconds: this.state.times.miliseconds
+                }
+            })
+            
+        }
+    }
 
-let resetButton = document.getElementById('reset');
-let ulList = document.querySelector('.results');
-resetButton.addEventListener('click', () => stopwatch.resetBtn(ulList));
+    stop = () => {
+        this.state.running = false;
+        clearInterval(this.state.watch);
+    } 
 
-let resetResultsButton = document.getElementById('resetResults');
-resetResultsButton.addEventListener('click', () => stopwatch.resetResults());
+    resetBtn = () => {
+        this.state.running = false;
+        clearInterval(this.state.watch);
+        if (this.state.arrResults.length < 10) {
+        this.state.arrResults.push(this.state.times)
+        }
+        else (alert('Max result is 10. Reset results'))
+       
+        this.setState({
+            times: {
+                minutes: 0,
+                seconds: 0,
+                miliseconds: 0
+            }
+        })
+    }
 
+    resetResults = () => {
+        this.setState({
+            arrResults: []
+        })
+    }
+
+    render() {
+        const {start="Start", stop="Stop", reset="Reset", results="Results", resetResults="Reset results", time="Time" } = this.props;
+        return (
+            <div className="timer">
+            <nav className="controls">
+                <a href="#" className="button" id="start" onClick={this.start}>{start} </a>
+                <a href="#" className="button" id="stop" onClick={this.stop}>{stop}</a>
+                <a href="#" className="button" id="reset" onClick={this.resetBtn}>{reset}</a>
+            </nav>
+            <Stopwatch formatTime={this.format(this.state.times)} /> 
+            <h2>{results}</h2>
+            <CreateLi results={this.state.arrResults} format={this.format} pad0={this.pad0} time={time}/>
+            <a href="#" className="button" id="resetResults" onClick={this.resetResults}>{resetResults}</a>
+            </div>
+        )
+    }
+}
+
+class Stopwatch extends React.Component {
+    constructor(props) {super(props);}
+
+    render() {
+    return <div className="stopwatch">{this.props.formatTime}</div>
+    }
+}
+
+class CreateLi extends React.Component {
+    constructor(props) {super(props);}
+  
+    render() {
+        let pad0 = this.props.pad0
+        let liList = this.props.results.map((li, id) => {
+                return <li key={id}>{this.props.time} {id+1}: {this.props.format(li)}</li>
+            })
+        return (
+            <ul className="results">
+                {liList}
+            </ul>
+            )
+    }
+}
+
+
+ReactDOM.render(<Timer 
+    reset=" Wyzeruj" 
+    resetResults="Skasuj wyniki" 
+    results="Wyniki"
+    time="Czas"/>
+    , document.getElementById('app'));
+
+ReactDOM.render(<Timer />
+    , document.getElementById('app1'));

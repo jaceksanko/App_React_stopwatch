@@ -5,12 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel script.js --watch --out-file script-compiled.js"
+    "start": "parallelshell \"npm run start-serv\" \"npm run start-babel\"",
+    "start-babel": "babel script.js --watch --out-file script-compiled.js",
+    "start-serv": "http-server"
   },
   "author": "Jacek Sańko",
   "license": "ISC",
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-latest": "^6.24.1"
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babel-preset-latest": "^6.24.1",
+    "http-server": "^0.11.1",
+    "parallelshell": "^3.0.2"
   }
 }
